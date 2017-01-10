@@ -6,7 +6,7 @@ require 'travelpayouts_api/version'
 Gem::Specification.new do |s|
   s.name        = 'travelpayouts_api'
   s.version     = TravelPayouts::VERSION
-  s.date        = '2015-02-25'
+  s.date        = '2017-01-10'
   s.summary     = 'Travelpayouts API'
   s.description = 'Ruby gem for travelpayouts api'
   s.authors     = ['Vitaly Dyatlov']
@@ -17,6 +17,7 @@ Gem::Specification.new do |s|
   s.required_ruby_version = '>= 2.2.0'
   s.add_development_dependency 'rspec'
   s.add_development_dependency 'webmock'
-  s.add_dependency 'rest-client'
-  s.add_dependency 'hashie'
+  s.add_development_dependency 'pry'
+  s.add_dependency 'oj'
+  s.add_dependency 'http'
 end

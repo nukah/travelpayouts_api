@@ -1,4 +1,5 @@
-require 'rest_client'
+require 'http'
+require 'oj'
 require 'digest/md5'
 
 require 'travelpayouts_api/request'
@@ -9,6 +10,10 @@ require 'travelpayouts_api/flight'
 require 'travelpayouts_api/hotel'
 require 'travelpayouts_api/api'
 require 'travelpayouts_api/error'
+
+Oj.default_options = {
+  class_cache: true
+}
 
 class Hash
   def to_query(namespace = nil)
