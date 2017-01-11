@@ -59,7 +59,6 @@ module TravelPayouts
       def request_headers(include_content_type = false)
         {
           x_access_token: config.token,
-          accept_encoding: 'gzip, deflate',
           accept: :json
         }.tap do |headers|
           headers[:content_type] = 'application/json' if include_content_type
@@ -81,31 +80,34 @@ module TravelPayouts
         end
       end
 
-      def run_post(url, params, headers)
-        begin
-          response = persistent(url) do |http, path|
-            http.headers(headers).post(path, form: params).flush
+      def get_response(url, headers)
+        response =
+          begin
+            persistent(url) do |http, path|
+              yield(http.headers(headers).use(:auto_inflate, :auto_deflate), path).flush
+            end
+          rescue HTTP::Error => e
+            raise Error.new(e.message)
           end
+
+        if response.code == 500
           err = Error.new('Server returned 500 error!')
           err.response = response
-          raise err if response.code == 500
-          response.to_s
-        rescue HTTP::Error => e
-          raise Error.new(e.message)
+          raise err
+        end
+
+        response.to_s
+      end
+
+      def run_post(url, params, headers)
+        get_response(url, headers) do |connection, path|
+          connection.post(path, body: params.to_json)
         end
       end
 
       def run_get(url, params, headers)
-        begin
-          response = persistent(url) do |http, path|
-            http.headers(headers).get(path, params: params).flush
-          end
-          err = Error.new('Server returned 500 error!')
-          err.response = response
-          raise err if response.code == 500
-          response.to_s
-        rescue HTTP::Error => e
-          raise Error.new(e.message)
+        get_response(url, headers) do |connection, path|
+          connection.get(path, params: params)
         end
       end
 
