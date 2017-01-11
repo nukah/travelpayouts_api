@@ -7,10 +7,7 @@ module TravelPayouts
 
         params.delete_if{ |_, v| v == nil }
 
-        response = run_get(url, params, request_headers)
-        data = response.to_s
-
-        skip_parse ? data : respond(data)
+        run_get(url, params, request_headers, skip_parse)
       end
 
       def signed_flight_request(method, url, params)
@@ -59,6 +56,7 @@ module TravelPayouts
       def request_headers(include_content_type = false)
         {
           x_access_token: config.token,
+          accept_encoding: 'gzip, deflate',
           accept: :json
         }.tap do |headers|
           headers[:content_type] = 'application/json' if include_content_type
@@ -80,11 +78,11 @@ module TravelPayouts
         end
       end
 
-      def get_response(url, headers)
+      def get_response(url, headers, skip_parse)
         response =
           begin
             persistent(url) do |http, path|
-              yield(http.headers(headers).use(:auto_inflate, :auto_deflate), path).flush
+              yield(http.headers(headers).use(:auto_inflate), path).flush
             end
           rescue HTTP::Error => e
             raise Error.new(e.message)
@@ -96,17 +94,17 @@ module TravelPayouts
           raise err
         end
 
-        response.to_s
+        skip_parse ? response.to_s : respond(response.to_s)
       end
 
-      def run_post(url, params, headers)
-        get_response(url, headers) do |connection, path|
+      def run_post(url, params, headers, skip_parse = false)
+        get_response(url, headers, skip_parse) do |connection, path|
           connection.post(path, body: params.to_json)
         end
       end
 
-      def run_get(url, params, headers)
-        get_response(url, headers) do |connection, path|
+      def run_get(url, params, headers, skip_parse = false)
+        get_response(url, headers, skip_parse) do |connection, path|
           connection.get(path, params: params)
         end
       end
