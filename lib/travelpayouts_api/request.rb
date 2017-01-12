@@ -88,8 +88,8 @@ module TravelPayouts
             raise Error.new(e.message)
           end
 
-        if response.code == 500
-          err = Error.new('Server returned 500 error!')
+        if response.code != 200
+          err = Error.new('Request failed!')
           err.response = response
           raise err
         end
